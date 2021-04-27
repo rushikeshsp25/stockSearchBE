@@ -2,6 +2,8 @@ from django.http import JsonResponse, HttpResponse
 import datetime
 import json
 from .db_connection import Redis
+from django.shortcuts import render
+
 
 REDIS_ENCODING_FORMAT = "utf-8"
 redis_instance = Redis.getInstance()
@@ -28,3 +30,8 @@ def stock_search(request):
 
     else:
         return HttpResponse(status=404)
+
+
+
+def index(request):
+    return render(request, "index.html")

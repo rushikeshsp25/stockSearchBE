@@ -5,6 +5,7 @@ import csv
 from django.conf import settings
 import redis
 import json
+import datetime
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
@@ -16,7 +17,9 @@ BSE_REQUEST_HEADERS = {
 ENCODING_FORMAT = "utf-8"
 
 def get_file_name():
-    return "eq051110"
+    todays_date_string = (datetime.datetime.today() - datetime.timedelta(days=1) ).strftime("%d/%m/%y")
+    file_name = "EQ"+ todays_date_string.replace('/','')
+    return file_name
 
 def fetch_and_parse_csv():
     try:
@@ -27,16 +30,15 @@ def fetch_and_parse_csv():
         redis_instance.flushall()
 
         filename = get_file_name()
+        print("Fetching file: "+ filename+"...")
         
-        response = requests.get(BSE_ENDPOINT+filename+"_csv.zip", headers=BSE_REQUEST_HEADERS)
-        
+        response = requests.get(BSE_ENDPOINT+filename+"_CSV.zip", headers=BSE_REQUEST_HEADERS)
+        print("Response from BSE API: ", response)
         response_content = io.BytesIO(response.content)
 
         if zipfile.is_zipfile(response_content):
-
             zipFile = zipfile.ZipFile(response_content)
             data = zipFile.read(filename.upper()+".CSV")
-
             csv_reader = csv.reader(io.StringIO(
                 data.decode(ENCODING_FORMAT)), delimiter=',')
 
@@ -53,9 +55,10 @@ def fetch_and_parse_csv():
                     "close": row[7]
                 }
                 redis_instance.set(row[0]+"-"+row[1], json.dumps(value, separators=(',', ':')))
+            print("Operation Successfull")
         else:
             raise Exception("Invalid zip format")
     except Exception as e:
-        print(e)
+        print("Exception Occured: ",e)
 
 fetch_and_parse_csv()
