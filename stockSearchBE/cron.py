@@ -2,7 +2,6 @@ import requests
 import zipfile
 import io
 import csv
-from django.conf import settings
 import redis
 import json
 import datetime
